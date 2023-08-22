@@ -5,14 +5,17 @@ from Bio import SeqIO
 
 # function that takes two sequences seq1 and seq2, and returns the size of the longest suffix of seq1 that is identical to the prefix of seq2
 # from https://www.geeksforgeeks.org/python-program-to-check-overlapping-prefix-suffix-in-two-lists/
-def suffix_prefix_size(seq1, seq2):
-	for char in range(len(seq1)):           # for each character in seq1
-		
-		if seq2.startswith(seq1[char:]):    # check if seq2 starts with the suffix of seq1
-			res = seq1[char:]               # if yes, return the size of the identical suffix/prefix
-			return(len(res))
+def get_suffix_prefix(seq1, seq2, minlen):
+	
+	for i in range(100):
+		seq1sub = seq1[:len(seq1)-i]
+		seq2sub = seq2[i:]
 
-	return(0)                               # if none found, return 0
+		for char in range(len(seq1sub)):
+			if seq2sub.startswith(seq1sub[char:]) and len(seq1sub[char:]) >= minlen:
+				return(str(i) + '.' + str(len(seq1sub[char:])))
+
+	return('0')                               # if none found, return 0
 
 
 # related to argparse to get parameters and show help page
@@ -25,6 +28,13 @@ parser.add_argument("-l", "--min_length", help="Minimum length of suffix-prefix 
 
 # getting the parameters
 args = parser.parse_args()
+
+# Check if no arguments were provided, and if so, print the help message
+if not any(vars(args).values()):
+	parser.print_help()
+	exit()
+
+
 file1 = args.file1
 file2 = args.file2
 outfile = args.out
@@ -43,16 +53,23 @@ def main():
 		for record2 in SeqIO.parse(file2, "fasta"):
 			
 			# get the size of the longest suffix of seq1 identical to the prefix of seq2
-			sp_size = suffix_prefix_size(record1.seq.upper(), record2.seq.upper())
+			values = get_suffix_prefix(record1.seq.upper(), record2.seq.upper(), sp_min_len)
+			if(len(values)) > 1:
+				cutpositions,sp_size = values.split('.')
+				cutpositions = int(cutpositions)
+				sp_size = int(sp_size)
+				print(">" + record1.id + "|" + record2.id + "\n" + 
+					record1.seq.upper()[:(len(record1.seq)-cutpositions)] + record2.seq.upper()[(cutpositions+sp_size):])
+
 			
 			# print to terminal if size of identical suffix/prefix is at least a minimum
-			if sp_size >= sp_min_len:
-				print(">" + record1.id + "|" + record2.id + "\n" + 
-					record1.seq.upper()[:len(record1.seq)-sp_size] + record2.seq.upper())
+		#	if sp_size >= sp_min_len:
+		#		print(">" + record1.id + "|" + record2.id + "\n" + 
+		#			record1.seq.upper()[:len(record1.seq)-sp_size] + record2.seq.upper())
 
 			# write size of identical suffix/prefix to file, if optional output parameter set
-			if outfile is not None:
-				filehandle.write(record1.id + "\t" + record2.id + "\t" + str(sp_size) + "\n")
+		#	if outfile is not None:
+		#		filehandle.write(record1.id + "\t" + record2.id + "\t" + str(sp_size) + "\n")
 
 	# close file, if optional output parameter set
 	if outfile is not None:
