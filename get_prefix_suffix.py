@@ -3,19 +3,23 @@ import argparse
 from Bio import SeqIO
 
 
-# function that takes two sequences seq1 and seq2, and returns the size of the longest suffix of seq1 that is identical to the prefix of seq2
+# function that takes two sequences seq1 and seq2, and merges them if they overlap.
 # from https://www.geeksforgeeks.org/python-program-to-check-overlapping-prefix-suffix-in-two-lists/
 def get_suffix_prefix(seq1, seq2, minlen):
 	
-	for i in range(100):
-		seq1sub = seq1[:len(seq1)-i]
+	for i in range(100):                 # at most this bases are chopped from 5' and 3' ends of seq1 and seq2, respectively
+		seq1sub = seq1[:len(seq1)-i]     # get seq1 and seq2 chopped bases at their 5' and 3' ends
 		seq2sub = seq2[i:]
 
-		for char in range(len(seq1sub)):
+
+		# check if they overlap, with identical suffix and prefix
+		for char in range(len(seq1sub)):    
 			if seq2sub.startswith(seq1sub[char:]) and len(seq1sub[char:]) >= minlen:
+
+				# if they overlap, return the merged sequence
 				return(str(i) + '.' + str(len(seq1sub[char:])))
 
-	return('0')                               # if none found, return 0
+	return('0') # if they don't overlap, return character 0
 
 
 # related to argparse to get parameters and show help page
@@ -61,17 +65,6 @@ def main():
 				print(">" + record1.id + "|" + record2.id + "\n" + 
 					record1.seq.upper()[:(len(record1.seq)-cutpositions)] + record2.seq.upper()[(cutpositions+sp_size):])
 
-			
-			# print to terminal if size of identical suffix/prefix is at least a minimum
-		#	if sp_size >= sp_min_len:
-		#		print(">" + record1.id + "|" + record2.id + "\n" + 
-		#			record1.seq.upper()[:len(record1.seq)-sp_size] + record2.seq.upper())
-
-			# write size of identical suffix/prefix to file, if optional output parameter set
-		#	if outfile is not None:
-		#		filehandle.write(record1.id + "\t" + record2.id + "\t" + str(sp_size) + "\n")
-
-	# close file, if optional output parameter set
 	if outfile is not None:
 		filehandle.close()
 
